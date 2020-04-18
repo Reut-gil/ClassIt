@@ -5,26 +5,42 @@ from jsonschema.exceptions import SchemaError
 user_schema = {
   "type": "object",
   "properties": {
+    "Name": {
+        "type": "string"
+    },
     "Email": {
         "type": "string",
         "format": "email"
+    },
+    "Phone Number": {
+        "type": "string"
     },
     "Password": {
         "type": "string",
         "minLength": 8
     },
-    "First Name": {
-      "type": "string"
+    "Institution Name": {
+        "type": "string"
     },
-    "Last Name": {
-      "type": "string"
-    }
+    "City": {
+        "type": "string"
+    },
+    "Street": {
+        "type": "string"
+    },
+    "Street Number": {
+        "type": "number"
+    },
   },
   "required": [
+    "Name",
     "Email",
+    "Phone Number",
     "Password",
-    "First Name",
-    "Last Name"
+    "Institution Name",
+    "City",
+    "Street",
+    "Street Number"
   ],
     "additionalProperties": False
 }
@@ -147,3 +163,4 @@ def validate_apply_for_room(data):
     except SchemaError as e:
         return {'ok': False, 'message': e}
     return {'ok': True, 'data': data}
+
