@@ -1,5 +1,5 @@
 import pymongo
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from flask_pymongo import PyMongo
 import json
 from schemas import validate_user, validate_login, validate_search_institutions, validate_apply_for_room
@@ -8,6 +8,9 @@ from bson.objectid import ObjectId
 from flask_jwt_extended import (JWTManager, create_access_token, create_refresh_token,
                                 jwt_required, jwt_refresh_token_required, get_jwt_identity)
 from flask_bcrypt import Bcrypt
+from pyexcel_xls import get_data
+import pandas as pd
+import xlrd
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -46,12 +49,17 @@ room_application_collection = mongo.db.roomApplication
 
 @app.route("/")
 def hello():
-    return "Main web site"
+    return "Main web"
 
 
 @app.route("/about")
 def about():
-    return "About info"
+    return "About page"
+
+
+@app.route("/upload-classes")
+def upload():
+    return render_template('index.html')
 
 
 @app.route("/register", methods=["POST"])
@@ -64,11 +72,38 @@ def register():
         if user_collection.count_documents(filter):
             return jsonify({"error": "The email " + content['Email'] + " exists!"}), 500
         else:
-            user_collection.insert({"Name": content["Name"], "Email": content['Email'], "Phone Number": content["Phone Number"], "Password": content["Password"], "Institution Name": content["Institution Name"]})
-            institutions_collection.insert({"Institution Name": content["Institution Name"], "Street": content["Street"], "City": content["City"], "Street Number": content["Street Number"]})
+            user_collection.insert(
+                {"Name": content["Name"], "Email": content['Email'], "Phone Number": content["Phone Number"],
+                 "Password": content["Password"], "Institution Name": content["Institution Name"]})
+            institutions_collection.insert(
+                {"Institution Name": content["Institution Name"], "Street": content["Street"], "City": content["City"],
+                 "Street Number": content["Street Number"]})
             return jsonify({"result": "User created successfully"}), 200
     else:
         return jsonify({"error": "Invalid parameters: {}".format(data['message'])}), 500
+
+
+@app.route("/upload-file", methods=["GET", "POST"])
+def upload_file():
+    if request.method == "POST":
+        file = request.form['upload-file']
+        loc = file
+        wb = xlrd.open_workbook(loc)
+        sheet = wb.sheet_by_index(0)
+        for i in range(1, sheet.nrows):
+            student_seat = True if sheet.cell_value(i, 6) == "כן" else False
+            projector = True if sheet.cell_value(i, 7) == "כן" else False
+            accessibility = True if sheet.cell_value(i, 8) == "כן" else False
+            computers = True if sheet.cell_value(i, 9) == "כן" else False
+            rooms_collection.insert_one(
+                {"Building Number": int(sheet.cell_value(i, 0)), "Building Name": sheet.cell_value(i, 1),
+                 "Floor Number": int(sheet.cell_value(i, 2)), "Class Number": int(sheet.cell_value(i, 3)),
+                 "Class Code": sheet.cell_value(i, 4),
+                 "Number of Seats": int(sheet.cell_value(i, 5)), "Student Seat": student_seat,
+                 "Projector": projector, "Accessibility": accessibility,
+                 "Computers": computers, "IsApplied": False})
+        return "OK"
+
 
 
 @app.route("/login", methods=["POST"])
