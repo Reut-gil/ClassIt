@@ -12,6 +12,13 @@ from pyexcel_xls import get_data
 import pandas as pd
 import xlrd
 
+class AppliedClass:
+    def __init__(self, date, start_hour, end_hour, inviter_email):
+        self.date = date
+        self.start_hour = start_hour
+        self.end_hour = end_hour
+        self.inviter_email = inviter_email
+
 
 class JSONEncoder(json.JSONEncoder):
     ''' extend json-encoder class'''
@@ -101,7 +108,7 @@ def upload_file():
                  "Class Code": sheet.cell_value(i, 4),
                  "Number of Seats": int(sheet.cell_value(i, 5)), "Student Seat": student_seat,
                  "Projector": projector, "Accessibility": accessibility,
-                 "Computers": computers, "IsApplied": False})
+                 "Computers": computers, "IsApplied": []})  # TODO need to check if working
         return "OK"
 
 
@@ -131,8 +138,14 @@ def apply_for_rooms():
     if data["ok"]:
         data = data["data"]
         is_available = check_if_room_available(data)
-        # room_application_collection.insert_one(data)
-        return "OK" if is_available else "NOT AVAILABLE"
+        if is_available:    # TODO need to check if working
+            room_application_collection.insert_one(data)
+            applied_obj = AppliedClass(data["Date"], data["Start Hour"], data["Finish Hour"], data["Email"])
+            jsonStr = json.dumps(applied_obj.__dict__)
+            rooms_collection.update({'_id': is_available}, {'$push': {'IsApplid': jsonStr}})
+            return "OK"
+        else:
+            return "NOT AVAILABLE"
     else:
         return "ERROR"
 
@@ -150,7 +163,7 @@ def check_if_room_available(data):
                     is_accessability is room[
                 "Accessability"]) \
                     and room["IsApplied"] is False:
-                return True
+                return room["_id"]
         else:
             return False
 
