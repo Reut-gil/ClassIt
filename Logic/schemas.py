@@ -98,13 +98,16 @@ apply_for_rooms_schema = {
         "Finish Hour": {
             "type": "string"
         },
+        "Number of Classes": {
+            "type": "number"
+        },
         "Number of Seats": {
             "type": "number"
         },
         "Projector": {
             "type": "boolean"
         },
-        "Accessability": {
+        "Accessibility": {
             "type": "boolean"
         },
         "Institution": {
@@ -118,10 +121,44 @@ apply_for_rooms_schema = {
         "Date",
         "Start Hour",
         "Finish Hour",
+        "Number of Classes",
         "Number of Seats",
         "Projector",
-        "Accessability",
+        "Accessibility",
         "Institution"
+    ],
+    "additionalProperties": False
+}
+
+confirmation_schema = {
+    "type": "object",
+    "properties": {
+        "Is confirmed": {
+            "type": "boolean"
+         },
+        "Class Code": {
+            "type": "string"
+        },
+        "Email of Applier": {
+            "type": "string"
+        },
+        "Date": {
+            "type": "string"
+        },
+        "Start Hour": {
+            "type": "string"
+        },
+        "Finish Hour": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "Is confirmed",
+        "Class Code",
+        "Email of Applier",
+        "Date",
+        "Start Hour",
+        "Finish Hour"
     ],
     "additionalProperties": False
 }
@@ -155,6 +192,7 @@ def validate_search_institutions(data):
         return {'ok': False, 'message': e}
     return {'ok': True, 'data': data}
 
+
 def validate_apply_for_room(data):
     try:
         validate(data, apply_for_rooms_schema)
@@ -164,3 +202,12 @@ def validate_apply_for_room(data):
         return {'ok': False, 'message': e}
     return {'ok': True, 'data': data}
 
+
+def validate_confirmation(data):
+    try:
+        validate(data, confirmation_schema)
+    except ValidationError as e:
+        return {'ok': False, 'message': e}
+    except SchemaError as e:
+        return {'ok': False, 'message': e}
+    return {'ok': True, 'data': data}

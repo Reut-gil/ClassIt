@@ -1,8 +1,8 @@
 import pymongo
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, url_for, redirect
 from flask_pymongo import PyMongo
 import json
-from schemas import validate_user, validate_login, validate_search_institutions, validate_apply_for_room
+from schemas import validate_user, validate_login, validate_search_institutions, validate_apply_for_room, validate_confirmation
 import datetime
 from bson.objectid import ObjectId
 from flask_jwt_extended import (JWTManager, create_access_token, create_refresh_token,
@@ -11,6 +11,7 @@ from flask_bcrypt import Bcrypt
 from pyexcel_xls import get_data
 import pandas as pd
 import xlrd
+
 
 class AppliedClass:
     def __init__(self, date, start_hour, end_hour, inviter_email):
@@ -42,6 +43,10 @@ jwt = JWTManager(app)
 mongo = PyMongo(app)
 app.json_encoder = JSONEncoder
 
+value = []
+apply_for_class_info = ""
+name_of_institution_just_register = ""
+
 user_collection = mongo.db.myusers
 rooms_collection = mongo.db.rooms
 institutions_collection = mongo.db.institutions
@@ -69,8 +74,10 @@ def upload():
     return render_template('index.html')
 
 
+# registration
 @app.route("/register", methods=["POST"])
 def register():
+    global name_of_institution_just_register
     data = validate_user(request.get_json())
     if data["ok"]:
         content = data['data']
@@ -85,11 +92,13 @@ def register():
             institutions_collection.insert(
                 {"Institution Name": content["Institution Name"], "Street": content["Street"], "City": content["City"],
                  "Street Number": content["Street Number"]})
+            name_of_institution_just_register = content["Institution Name"]
             return jsonify({"result": "User created successfully"}), 200
     else:
         return jsonify({"error": "Invalid parameters: {}".format(data['message'])}), 500
 
 
+# uploading the excel file of the class
 @app.route("/upload-file", methods=["GET", "POST"])
 def upload_file():
     if request.method == "POST":
@@ -103,16 +112,17 @@ def upload_file():
             accessibility = True if sheet.cell_value(i, 8) == "כן" else False
             computers = True if sheet.cell_value(i, 9) == "כן" else False
             rooms_collection.insert_one(
-                {"Building Number": int(sheet.cell_value(i, 0)), "Building Name": sheet.cell_value(i, 1),
+                {"Institution Name": name_of_institution_just_register, "Building Number": int(sheet.cell_value(i, 0)),
+                 "Building Name": sheet.cell_value(i, 1),
                  "Floor Number": int(sheet.cell_value(i, 2)), "Class Number": int(sheet.cell_value(i, 3)),
                  "Class Code": sheet.cell_value(i, 4),
                  "Number of Seats": int(sheet.cell_value(i, 5)), "Student Seat": student_seat,
                  "Projector": projector, "Accessibility": accessibility,
-                 "Computers": computers, "IsApplied": []})  # TODO need to check if working
+                 "Computers": computers, "IsApplied": []})
         return "OK"
 
 
-
+# login the website
 @app.route("/login", methods=["POST"])
 def login():
     data = validate_login(request.get_json())
@@ -130,44 +140,104 @@ def login():
         return jsonify({'ok': False, 'message': 'Bad request parameters: {}'.format(data['message'])}), 400
 
 
+# applied for class form
 @app.route("/RegistrationForm", methods=['GET', 'POST'])
 def apply_for_rooms():
-    institutions_as_json = search_institutions_result()
-    return institutions_as_json  # TODO need to return the array
+    global value, apply_for_class_info
+    is_available = []
+    # institutions_as_json = search_institutions_result()
+    # return institutions_as_json  # TODO need to return the array
     data = validate_apply_for_room(request.get_json())
     if data["ok"]:
         data = data["data"]
-        is_available = check_if_room_available(data)
-        if is_available:    # TODO need to check if working
+        number_of_classes = data["Number of Classes"]
+        count = 0
+        count_false = 0
+        while number_of_classes:
+            is_available.append(check_if_room_available(data, is_available))
+            number_of_classes = (number_of_classes-1)
+        if is_available:
+            for x in is_available:
+                if x == "No available room":
+                    count = (count+1)
+                if x is False:
+                    return jsonify({'ok': False, 'data': 'institution not found'}), 400
+            if count == len(is_available):
+                return jsonify({'ok': False, 'data': "There is no available room according your requirements"}), 400
+            is_available.remove("No available room")
             room_application_collection.insert_one(data)
-            applied_obj = AppliedClass(data["Date"], data["Start Hour"], data["Finish Hour"], data["Email"])
-            jsonStr = json.dumps(applied_obj.__dict__)
-            rooms_collection.update({'_id': is_available}, {'$push': {'IsApplid': jsonStr}})
-            return "OK"
+            room_application_collection.update({"Email": data["Email"]}, {"$set": {"IsAprroved": False}})
+            value = is_available
+            apply_for_class_info = data
+            institution = data["Institution"]
+            administrator_name = user_collection.find_one({"Institution Name": institution})
+            administrator_name = administrator_name["Name"]
+            apply_for_class_info.update({"Manger Name": administrator_name})
+            class_code = get_class_code(value)
+            apply_for_class_info.update({"Class code": class_code})
+            apply_for_class_info.update({"Number of available classes": len(is_available)})
+            return apply_for_class_info
         else:
             return "NOT AVAILABLE"
     else:
         return "ERROR"
 
 
-def check_if_room_available(data):
+# get the class's code
+def get_class_code(class_id):
+    class_code = []
+    for classes in class_id:
+        exact_class = rooms_collection.find_one({'_id': classes})
+        class_code.append(exact_class["Class Code"])
+    return class_code
+
+
+@app.route("/confirmation", methods=["POST"])
+# @jwt_required
+def getData():
+    data = validate_confirmation(request.get_json())
+    if data["ok"]:
+        data = data["data"]
+        class_code = data["Class Code"]
+        email = data["Email of Applier"]
+        if data["Is confirmed"]:
+            rooms_collection.update_one({"Class Code": class_code}, {"$set": {"IsAprroved": True}})
+            applied_obj = AppliedClass(data["Date"], data["Start Hour"], data["Finish Hour"], data["Email of Applier"])
+            jsonStr = json.dumps(applied_obj.__dict__)
+            rooms_collection.update({"Class Code": class_code}, {'$push': {'IsApplied': jsonStr}})
+            return "The application was approved"  # TODO need to sent an email confirmation + sms
+        else:
+            return "The application wasn't approved"
+
+
+# checking if the class is available and return the id of the free class
+def check_if_room_available(data, class_array):
     number_of_seats = data["Number of Seats"]
     is_projector = data["Projector"]
-    is_accessability = data["Accessability"]
+    is_accessibility = data["Accessibility"]
     res = rooms_collection.find({"Institution": data['Institution']})
     if not res:
         return False
     else:
         for room in res:
-            if (number_of_seats <= room["Number of Seats"]) and (is_projector is room["Projector"]) and (
-                    is_accessability is room[
-                "Accessability"]) \
-                    and room["IsApplied"] is False:
-                return room["_id"]
+            if class_array:
+                if (number_of_seats <= room["Number of Seats"]) and (is_projector is room["Projector"]) and (
+                        is_accessibility is room["Accessibility"] and room["_id"] not in class_array):
+                    return room["_id"]
+                else:
+                    return "No available room"
+            else:
+                if (number_of_seats <= room["Number of Seats"]) and (is_projector is room["Projector"]) and (
+                        is_accessibility is room["Accessibility"]):
+                    return room["_id"]
+                else:
+                    return "No available room"
         else:
             return False
 
 
+
+# searching which institutions were registered to the website and return an array of the names
 def search_institutions_result():
     result_from_collection_institutions = institutions_collection.find()
     institutions = []
