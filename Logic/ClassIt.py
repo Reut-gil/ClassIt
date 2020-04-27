@@ -2,7 +2,8 @@ import pymongo
 from flask import Flask, jsonify, request, render_template, url_for, redirect
 from flask_pymongo import PyMongo
 import json
-from schemas import validate_user, validate_login, validate_search_institutions, validate_apply_for_room, validate_confirmation
+from schemas import validate_user, validate_login, validate_search_institutions, validate_apply_for_room, \
+    validate_confirmation
 import datetime
 from bson.objectid import ObjectId
 from flask_jwt_extended import (JWTManager, create_access_token, create_refresh_token,
@@ -141,7 +142,7 @@ def login():
 
 
 # applied for class form
-@app.route("/RegistrationForm", methods=['GET', 'POST'])
+@app.route("/Applying-for-room", methods=['GET', 'POST'])
 def apply_for_rooms():
     global value, apply_for_class_info
     is_available = []
@@ -152,14 +153,13 @@ def apply_for_rooms():
         data = data["data"]
         number_of_classes = data["Number of Classes"]
         count = 0
-        count_false = 0
         while number_of_classes:
             is_available.append(check_if_room_available(data, is_available))
-            number_of_classes = (number_of_classes-1)
+            number_of_classes = (number_of_classes - 1)
         if is_available:
             for x in is_available:
                 if x == "No available room":
-                    count = (count+1)
+                    count = (count + 1)
                 if x is False:
                     return jsonify({'ok': False, 'data': 'institution not found'}), 400
             if count == len(is_available):
@@ -220,21 +220,21 @@ def check_if_room_available(data, class_array):
         return False
     else:
         for room in res:
+            is_time_available = check_class_availability(data, room)
             if class_array:
                 if (number_of_seats <= room["Number of Seats"]) and (is_projector is room["Projector"]) and (
-                        is_accessibility is room["Accessibility"] and room["_id"] not in class_array):
+                        is_accessibility is room["Accessibility"] and room["_id"] not in class_array and is_time_available):
                     return room["_id"]
                 else:
                     return "No available room"
             else:
                 if (number_of_seats <= room["Number of Seats"]) and (is_projector is room["Projector"]) and (
-                        is_accessibility is room["Accessibility"]):
+                        is_accessibility is room["Accessibility"] and is_time_available):
                     return room["_id"]
                 else:
                     return "No available room"
         else:
             return False
-
 
 
 # searching which institutions were registered to the website and return an array of the names
@@ -244,6 +244,20 @@ def search_institutions_result():
     for key, inst in enumerate(result_from_collection_institutions):
         institutions.append({str(key): inst["Institution"]})
     return jsonify(results=institutions)
+
+
+# checks the time the class is available
+def check_class_availability(data, room):
+    date = data["Date"]
+    start_hour = data["Start Hour"]
+    end_hour = data["Finish Hour"]
+    for time in room["IsApplied"]:
+        time = json.loads(time)
+        if (date == time["date"] and time["end_hour"] >= start_hour >= time["start_hour"]) or \
+                (date == time["date"] and time["start_hour"] < end_hour <= time["end_hour"]):
+            return False
+        else:
+            return True
 
 
 if __name__ == '__main__':
