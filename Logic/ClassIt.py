@@ -3,8 +3,10 @@ from flask import Flask, jsonify, request, render_template, url_for, redirect
 from flask_pymongo import PyMongo
 import json
 from schemas import validate_user, validate_login, validate_search_institutions, validate_apply_for_room, \
-    validate_confirmation
+    validate_confirmation, validate_contact_request, validate_profile
 import datetime
+from datetime import datetime as Dtime
+from datetime import time as my_time
 from bson.objectid import ObjectId
 from flask_jwt_extended import (JWTManager, create_access_token, create_refresh_token,
                                 jwt_required, jwt_refresh_token_required, get_jwt_identity)
@@ -52,6 +54,7 @@ user_collection = mongo.db.myusers
 rooms_collection = mongo.db.rooms
 institutions_collection = mongo.db.institutions
 room_application_collection = mongo.db.roomApplication
+contact_collection = mongo.db.contact
 
 """rooms_collection.insert_one(
     {"Class Number": 1102,
@@ -89,14 +92,36 @@ def register():
         else:
             user_collection.insert(
                 {"Name": content["Name"], "Email": content['Email'], "Phone Number": content["Phone Number"],
-                 "Password": content["Password"], "Institution Name": content["Institution Name"]})
-            institutions_collection.insert(
-                {"Institution Name": content["Institution Name"], "Street": content["Street"], "City": content["City"],
-                 "Street Number": content["Street Number"]})
-            name_of_institution_just_register = content["Institution Name"]
+                 "Password": content["Password"]})
+            # institutions_collection.insert(
+            #     {"Institution Name": content["Institution Name"], "Street": content["Street"], "City": content["City"],
+            #      "Street Number": content["Street Number"]})
+            # name_of_institution_just_register = content["Institution Name"]
             return jsonify({"result": "User created successfully"}), 200
     else:
         return jsonify({"error": "Invalid parameters: {}".format(data['message'])}), 500
+
+
+@app.route("/profile", methods=["GET", "POST"])
+@jwt_required
+def profile():
+    current_user = ObjectId(get_jwt_identity())
+    if request.method == "GET":
+        user = user_collection.find_one({'_id': current_user})
+        return jsonify({"Name": user["Name"], "Email": user["Email"], "Phone Number": user["Phone Number"]})
+    elif request.method == "POST":
+        data = validate_profile(request.get_json())
+        if data["ok"]:
+            content = data['data']
+            user = user_collection.find_one({'_id': current_user})
+            administrator_name = user["Name"]
+            user_collection.update({"_id": current_user}, {"$set": {"Institution Name": content["Institution Name"]}})
+            institutions_collection.insert(
+                {"Institution Name": content["Institution Name"], "Street": content["Street"], "City": content["City"], \
+                 "Administrator": administrator_name})
+            return jsonify({"result": "The institution's details were added successfully"}), 200
+        else:
+            return jsonify({"error": "Invalid parameters: {}".format(data['message'])}), 500
 
 
 # uploading the excel file of the class
@@ -104,7 +129,11 @@ def register():
 def upload_file():
     if request.method == "POST":
         file = request.form['upload-file']
+        file2 = request.form['upload-file2']
         loc = file
+        wb = xlrd.open_workbook(file2)
+        sheet2 = wb.sheet_by_index(0)
+        read_from_file2(sheet2, wb)
         wb = xlrd.open_workbook(loc)
         sheet = wb.sheet_by_index(0)
         for i in range(1, sheet.nrows):
@@ -120,7 +149,25 @@ def upload_file():
                  "Number of Seats": int(sheet.cell_value(i, 5)), "Student Seat": student_seat,
                  "Projector": projector, "Accessibility": accessibility,
                  "Computers": computers, "IsApplied": []})
-        return "OK"
+        return jsonify({"result": "The file uploaded successfully"}), 200
+
+
+def read_from_file2(file, book):
+    for i in range(1, file.nrows):
+        class_code = str(int(file.cell_value(i, 10)))
+        date = int(file.cell_value(i, 6))
+        dt = Dtime.fromordinal(Dtime(1900, 1, 1).toordinal() + date - 2)
+        date = str(dt.date())
+        start_hour = file.cell_value(i, 8)
+        date_values = xlrd.xldate_as_tuple(start_hour, book.datemode)
+        start_hour = my_time(*date_values[3:])
+        end_hour = file.cell_value(i, 9)
+        date_values = xlrd.xldate_as_tuple(end_hour, book.datemode)
+        end_hour = my_time(*date_values[3:])
+        applied_obj = AppliedClass(date, str(start_hour)[:5], str(end_hour)[:5], "")
+        jsonStr = json.dumps(applied_obj.__dict__)
+        print(jsonStr)
+        rooms_collection.update_one({"Class Code": class_code}, {'$push': {'IsApplied': jsonStr}})
 
 
 # login the website
@@ -136,51 +183,53 @@ def login():
             print(access_token)
             return jsonify({'ok': True, 'data': access_token}), 200
         else:
-            return jsonify({'ok': False, 'message': 'invalid username or password'}), 401
+            return jsonify({'ok': False, 'message': 'invalid email or password'}), 401
     else:
         return jsonify({'ok': False, 'message': 'Bad request parameters: {}'.format(data['message'])}), 400
 
 
 # applied for class form
-@app.route("/Applying-for-room", methods=['GET', 'POST'])
+@app.route("/applying-for-room", methods=['GET', 'POST'])
 def apply_for_rooms():
     global value, apply_for_class_info
     is_available = []
-    # institutions_as_json = search_institutions_result()
-    # return institutions_as_json  # TODO need to return the array
-    data = validate_apply_for_room(request.get_json())
-    if data["ok"]:
-        data = data["data"]
-        number_of_classes = data["Number of Classes"]
-        count = 0
-        while number_of_classes:
-            is_available.append(check_if_room_available(data, is_available))
-            number_of_classes = (number_of_classes - 1)
-        if is_available:
-            for x in is_available:
-                if x == "No available room":
-                    count = (count + 1)
-                if x is False:
-                    return jsonify({'ok': False, 'data': 'institution not found'}), 400
-            if count == len(is_available):
+    if request.method == "GET":
+        institutions_as_json = search_institutions_result()
+        return institutions_as_json
+    elif request.method == "POST":
+        data = validate_apply_for_room(request.get_json())
+        if data["ok"]:
+            data = data["data"]
+            number_of_classes = data["Number of Classes"]
+            count = 0
+            while number_of_classes:
+                is_available.append(check_if_room_available(data, is_available))
+                number_of_classes = (number_of_classes - 1)
+            if is_available:
+                for x in is_available:
+                    if x == "No available room":
+                        count = (count + 1)
+                    if x is False:
+                        return jsonify({'ok': False, 'data': 'institution not found'}), 400
+                if count == len(is_available):
+                    return jsonify({'ok': False, 'data': "There is no available room according your requirements"}), 400
+                is_available.remove("No available room")
+                room_application_collection.insert_one(data)
+                room_application_collection.update({"Email": data["Email"]}, {"$set": {"IsAprroved": False}})
+                value = is_available
+                apply_for_class_info = data
+                institution = data["Institution"]
+                administrator_name = user_collection.find_one({"Institution Name": institution})
+                administrator_name = administrator_name["Name"]
+                apply_for_class_info.update({"Manger Name": administrator_name})
+                class_code = get_class_code(value)
+                apply_for_class_info.update({"Class code": class_code})
+                apply_for_class_info.update({"Number of available classes": len(is_available)})
+                return apply_for_class_info
+            else:
                 return jsonify({'ok': False, 'data': "There is no available room according your requirements"}), 400
-            is_available.remove("No available room")
-            room_application_collection.insert_one(data)
-            room_application_collection.update({"Email": data["Email"]}, {"$set": {"IsAprroved": False}})
-            value = is_available
-            apply_for_class_info = data
-            institution = data["Institution"]
-            administrator_name = user_collection.find_one({"Institution Name": institution})
-            administrator_name = administrator_name["Name"]
-            apply_for_class_info.update({"Manger Name": administrator_name})
-            class_code = get_class_code(value)
-            apply_for_class_info.update({"Class code": class_code})
-            apply_for_class_info.update({"Number of available classes": len(is_available)})
-            return apply_for_class_info
         else:
-            return "NOT AVAILABLE"
-    else:
-        return "ERROR"
+            return jsonify({'ok': False, 'message': 'Bad request parameters: {}'.format(data['message'])}), 400
 
 
 # get the class's code
@@ -193,21 +242,22 @@ def get_class_code(class_id):
 
 
 @app.route("/confirmation", methods=["POST"])
-# @jwt_required
+@jwt_required
 def getData():
     data = validate_confirmation(request.get_json())
     if data["ok"]:
         data = data["data"]
         class_code = data["Class Code"]
-        email = data["Email of Applier"]
+        # email = data["Email of Applier"]
         if data["Is confirmed"]:
-            rooms_collection.update_one({"Class Code": class_code}, {"$set": {"IsAprroved": True}})
+            room_application_collection.update_one({"Class Code": class_code}, {"$set": {"IsAprroved": True}})
             applied_obj = AppliedClass(data["Date"], data["Start Hour"], data["Finish Hour"], data["Email of Applier"])
             jsonStr = json.dumps(applied_obj.__dict__)
             rooms_collection.update({"Class Code": class_code}, {'$push': {'IsApplied': jsonStr}})
-            return "The application was approved"  # TODO need to sent an email confirmation + sms
+            return jsonify({'ok': True, 'data': "The application was approved"}), 200  # TODO need to sent an email
+            # confirmation + sms
         else:
-            return "The application wasn't approved"
+            return jsonify({'ok': True, 'data': "The application wasn't approved"}), 200
 
 
 # checking if the class is available and return the id of the free class
@@ -223,7 +273,8 @@ def check_if_room_available(data, class_array):
             is_time_available = check_class_availability(data, room)
             if class_array:
                 if (number_of_seats <= room["Number of Seats"]) and (is_projector is room["Projector"]) and (
-                        is_accessibility is room["Accessibility"] and room["_id"] not in class_array and is_time_available):
+                        is_accessibility is room["Accessibility"] and room[
+                    "_id"] not in class_array and is_time_available):
                     return room["_id"]
                 else:
                     return "No available room"
@@ -242,7 +293,7 @@ def search_institutions_result():
     result_from_collection_institutions = institutions_collection.find()
     institutions = []
     for key, inst in enumerate(result_from_collection_institutions):
-        institutions.append({str(key): inst["Institution"]})
+        institutions.append({str(key): inst["Institution Name"]})
     return jsonify(results=institutions)
 
 
@@ -258,6 +309,16 @@ def check_class_availability(data, room):
             return False
         else:
             return True
+
+
+@app.route("/contact")
+def contact():
+    data = validate_contact_request(request.get_json())
+    if data["ok"]:
+        contact_collection.insert_one(data["data"])
+        return jsonify({"result": "contact message created successfully"}), 200
+    else:
+        return jsonify({"error": "Invalid parameters: {}".format(data['message'])}), 500
 
 
 if __name__ == '__main__':
