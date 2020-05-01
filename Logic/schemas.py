@@ -3,64 +3,69 @@ from jsonschema.exceptions import ValidationError
 from jsonschema.exceptions import SchemaError
 
 user_schema = {
-  "type": "object",
-  "properties": {
-    "Name": {
-        "type": "string"
+    "type": "object",
+    "properties": {
+        "Name": {
+            "type": "string"
+        },
+        "Email": {
+            "type": "string",
+            "format": "email"
+        },
+        "Phone Number": {
+            "type": "string"
+        },
+        "Password": {
+            "type": "string",
+            "minLength": 8
+        },
     },
-    "Email": {
-        "type": "string",
-        "format": "email"
+    "required": [
+        "Name",
+        "Email",
+        "Phone Number",
+        "Password"
+    ],
+    "additionalProperties": False
+}
+
+profile_schema = {
+    "type": "object",
+    "properties": {
+        "Institution Name": {
+            "type": "string"
+        },
+        "City": {
+            "type": "string"
+        },
+        "Street": {
+            "type": "string"
+        },
     },
-    "Phone Number": {
-        "type": "string"
-    },
-    "Password": {
-        "type": "string",
-        "minLength": 8
-    },
-    "Institution Name": {
-        "type": "string"
-    },
-    "City": {
-        "type": "string"
-    },
-    "Street": {
-        "type": "string"
-    },
-    "Street Number": {
-        "type": "number"
-    },
-  },
-  "required": [
-    "Name",
-    "Email",
-    "Phone Number",
-    "Password",
-    "Institution Name",
-    "City",
-    "Street",
-    "Street Number"
-  ],
+    "required": [
+        "Institution Name",
+        "City",
+        "Street",
+    ],
     "additionalProperties": False
 }
 
 login_schema = {
-  "type": "object",
-  "properties": {
-    "Email": {
-        "type": "string",
-        "format": "email"
+    "type": "object",
+    "properties": {
+        "Email": {
+            "type": "string",
+            "format": "email"
+        },
+        "Password": {
+            "type": "string",
+            "minLength": 8
+        },
     },
-    "Password": {
-        "type": "string",
-        "minLength": 8
-    },
-  },
-  "required": [
-    "Email",
-    "Password"
-  ],
+    "required": [
+        "Email",
+        "Password"
+    ],
     "additionalProperties": False
 }
 
@@ -69,7 +74,7 @@ search_institution_schema = {
     "properties": {
         "Institution": {
             "type": "string"
-         },
+        },
     },
     "required": [
         "Institution"
@@ -110,6 +115,9 @@ apply_for_rooms_schema = {
         "Accessibility": {
             "type": "boolean"
         },
+        "Computers": {
+            "type": "boolean"
+        },
         "Institution": {
             "type": "string"
         }
@@ -125,6 +133,7 @@ apply_for_rooms_schema = {
         "Number of Seats",
         "Projector",
         "Accessibility",
+        "Computers",
         "Institution"
     ],
     "additionalProperties": False
@@ -135,7 +144,7 @@ confirmation_schema = {
     "properties": {
         "Is confirmed": {
             "type": "boolean"
-         },
+        },
         "Class Code": {
             "type": "string"
         },
@@ -163,6 +172,36 @@ confirmation_schema = {
     "additionalProperties": False
 }
 
+contact_schema = {
+    "type": "object",
+    "properties": {
+        "Name": {
+            "type": "string"
+        },
+        "Email": {
+            "type": "string",
+            "format": "email"
+        },
+        "Phone Number": {
+            "type": "string"
+        },
+        "Subject": {
+            "type": "string"
+        },
+        "Text": {
+            "type": "string"
+        },
+    },
+    "required": [
+        "Name",
+        "Email",
+        "Subject",
+        "text"
+    ],
+    "additionalProperties": False
+}
+
+
 def validate_user(data):
     try:
         validate(data, user_schema)
@@ -171,6 +210,17 @@ def validate_user(data):
     except SchemaError as e:
         return {'ok': False, 'message': e}
     return {'ok': True, 'data': data}
+
+
+def validate_profile(data):
+    try:
+        validate(data, profile_schema)
+    except ValidationError as e:
+        return {'ok': False, 'message': e}
+    except SchemaError as e:
+        return {'ok': False, 'message': e}
+    return {'ok': True, 'data': data}
+
 
 
 def validate_login(data):
@@ -206,6 +256,16 @@ def validate_apply_for_room(data):
 def validate_confirmation(data):
     try:
         validate(data, confirmation_schema)
+    except ValidationError as e:
+        return {'ok': False, 'message': e}
+    except SchemaError as e:
+        return {'ok': False, 'message': e}
+    return {'ok': True, 'data': data}
+
+
+def validate_contact_request(data):
+    try:
+        validate(data, contact_schema)
     except ValidationError as e:
         return {'ok': False, 'message': e}
     except SchemaError as e:
