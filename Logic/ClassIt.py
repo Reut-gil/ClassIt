@@ -14,6 +14,24 @@ from flask_bcrypt import Bcrypt
 from pyexcel_xls import get_data
 import pandas as pd
 import xlrd
+from flask_mail import Mail, Message
+import os
+import smtplib
+from email.message import EmailMessage
+
+
+EMAIL_ADDRESS = 'classit.info@gmail.com'
+EMAIL_PASSWORD = 'c1assit.support'
+
+# msg = EmailMessage()
+# msg['Subject'] = 'Hello'
+# msg['From'] = EMAIL_ADDRESS
+# msg['To'] = EMAIL_ADDRESS_RECIEVER
+# msg.set_content('How are you?')
+#
+# with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+#     smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+#     smtp.send_message(msg)
 
 
 class AppliedClass:
@@ -36,6 +54,7 @@ class JSONEncoder(json.JSONEncoder):
 
 
 app = Flask(__name__)
+mail = Mail(app)
 
 # connect to our mongodb
 app.config['MONGO_URI'] = "mongodb+srv://nofarana:nofar1234@cluster0-dkcnw.mongodb.net/ClassIt"
@@ -221,10 +240,12 @@ def apply_for_rooms():
                 institution = data["Institution"]
                 administrator_name = user_collection.find_one({"Institution Name": institution})
                 administrator_name = administrator_name["Name"]
+                administrator_email = administrator_name["Email"]
                 apply_for_class_info.update({"Manger Name": administrator_name})
                 class_code = get_class_code(value)
                 apply_for_class_info.update({"Class code": class_code})
                 apply_for_class_info.update({"Number of available classes": len(is_available)})
+                send_email_request(administrator_email)
                 return apply_for_class_info
             else:
                 return jsonify({'ok': False, 'data': "There is no available room according your requirements"}), 400
@@ -248,16 +269,56 @@ def getData():
     if data["ok"]:
         data = data["data"]
         class_code = data["Class Code"]
-        # email = data["Email of Applier"]
+        email = data["Email of Applier"]
         if data["Is confirmed"]:
             room_application_collection.update_one({"Class Code": class_code}, {"$set": {"IsAprroved": True}})
             applied_obj = AppliedClass(data["Date"], data["Start Hour"], data["Finish Hour"], data["Email of Applier"])
             jsonStr = json.dumps(applied_obj.__dict__)
             rooms_collection.update({"Class Code": class_code}, {'$push': {'IsApplied': jsonStr}})
+            send_email_approve(email)
             return jsonify({'ok': True, 'data': "The application was approved"}), 200  # TODO need to sent an email
             # confirmation + sms
         else:
+            send_email_reject(email)
             return jsonify({'ok': True, 'data': "The application wasn't approved"}), 200
+    else:
+        return jsonify({'ok': False, 'message': 'Bad request parameters: {}'.format(data['message'])}), 400
+
+
+def send_email_approve(email):
+    msg = EmailMessage()
+    msg['Subject'] = 'ClassIt | Class Request'
+    msg['From'] = EMAIL_ADDRESS
+    msg['To'] = email
+    msg.set_content('Your class request has been successfully approved!')
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+        smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+        smtp.send_message(msg)
+
+
+def send_email_reject(email):
+    msg = EmailMessage()
+    msg['Subject'] = 'ClassIt | Class Request'
+    msg['From'] = EMAIL_ADDRESS
+    msg['To'] = email
+    msg.set_content('Your class request has been rejected!')
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+        smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+        smtp.send_message(msg)
+
+
+def send_email_request(email):
+    msg = EmailMessage()
+    msg['Subject'] = 'ClassIt | Class Request'
+    msg['From'] = EMAIL_ADDRESS
+    msg['To'] = email
+    msg.set_content('You have a new class request in your mailbox')
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+        smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+        smtp.send_message(msg)
 
 
 # checking if the class is available and return the id of the free class
