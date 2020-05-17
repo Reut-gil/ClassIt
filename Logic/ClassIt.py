@@ -382,5 +382,15 @@ def contact():
         return jsonify({"error": "Invalid parameters: {}".format(data['message'])}), 500
 
 
+@app.route("/mail-box", methods=["GET"])
+@jwt_required
+def get_class_applications():
+    current_user = ObjectId(get_jwt_identity())
+    institution_name = user_collection.find_one({'_id': current_user})
+    institution_name = institution_name["Institution Name"]
+    application = room_application_collection.find_one({'Institution': institution_name})
+    return jsonify(application)
+
+
 if __name__ == '__main__':
     app.run(debug=True)
