@@ -19,9 +19,9 @@ import os
 import smtplib
 from email.message import EmailMessage
 
-
 EMAIL_ADDRESS = 'classit.info@gmail.com'
 EMAIL_PASSWORD = 'c1assit.support'
+
 
 # msg = EmailMessage()
 # msg['Subject'] = 'Hello'
@@ -111,7 +111,7 @@ def register():
         else:
             user_collection.insert(
                 {"Name": content["Name"], "Email": content['Email'], "Phone Number": content["Phone Number"],
-                 "Password": content["Password"]})
+                 "Password": content["Password"], "Institution Name": None})
             # institutions_collection.insert(
             #     {"Institution Name": content["Institution Name"], "Street": content["Street"], "City": content["City"],
             #      "Street Number": content["Street Number"]})
@@ -127,7 +127,16 @@ def profile():
     current_user = ObjectId(get_jwt_identity())
     if request.method == "GET":
         user = user_collection.find_one({'_id': current_user})
-        return jsonify({"Name": user["Name"], "Email": user["Email"], "Phone Number": user["Phone Number"]})
+        institution = user["Institution Name"]
+        if institution is None:
+            return jsonify({"Name": user["Name"], "Email": user["Email"], "Phone Number": user["Phone Number"], \
+                            "Institution Name": None})
+        else:
+            institution_col = institutions_collection.find_one({'Institution Name': institution})
+            return jsonify(
+                {"Name": user["Name"], "Email": user["Email"], "Phone Number": user["Phone Number"], "Street": \
+                    institution_col["Street"], "City": institution_col["City"], "Institution Name": user["Institution "
+                                                                                                         "Name"]})
     elif request.method == "POST":
         data = validate_profile(request.get_json())
         if data["ok"]:
