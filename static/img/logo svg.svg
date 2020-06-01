@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="222px" height="56px" viewBox="0 0 222 56" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 63.1 (92452) - https://sketch.com -->
+    <title>Group</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Group" transform="translate(1.000000, 1.000000)">
+            <g>
+                <text id="CLASSIT-Copy" font-family="STHeiti" font-size="30" font-weight="500" letter-spacing="13.3333333" fill="#FFFFFF">
+                    <tspan x="14" y="38">CLASSIT</tspan>
+                </text>
+                <line x1="174.310097" y1="35.5" x2="174.310097" y2="53.5" id="Line-Copy" stroke="#FFFFFF" stroke-width="2" stroke-linecap="square"></line>
+                <line x1="174.5" y1="53.5" x2="219.5" y2="53.5" id="Line-2-Copy" stroke="#FFFFFF" stroke-width="2" stroke-linecap="square"></line>
+                <line x1="219.5" y1="53.5" x2="219.5" y2="0.5" id="Line-3-Copy" stroke="#FFFFFF" stroke-width="2" stroke-linecap="square"></line>
+                <line x1="0.5" y1="53.5" x2="0.5" y2="0.5" id="Line-3-Copy-2" stroke="#FFFFFF" stroke-width="2" stroke-linecap="square"></line>
+                <line x1="164.5" y1="53.5" x2="0.5" y2="53.5" id="Line-5" stroke="#FFFFFF" stroke-width="2" stroke-linecap="square"></line>
+                <line x1="219.5" y1="0.5" x2="0.5" y2="0.5" id="Line-4-Copy" stroke="#FFFFFF" stroke-width="2" stroke-linecap="square"></line>
+            </g>
+        </g>
+    </g>
+</svg>
