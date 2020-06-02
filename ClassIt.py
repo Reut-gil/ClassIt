@@ -204,7 +204,10 @@ def profile():
 
 # uploading the excel file of the class
 @app.route("/upload-file", methods=["POST"])
+@jwt_required
 def upload_file():
+    current_user = ObjectId(get_jwt_identity())
+    institution_name = user_collection.find_one({'_id': current_user})
     if request.method == "POST":
         file = request.files["upload-file"].read()
         file2 = request.files["upload-file2"].read()
@@ -220,7 +223,7 @@ def upload_file():
             accessibility = True if sheet.cell_value(i, 8) == "כן" else False
             computers = True if sheet.cell_value(i, 9) == "כן" else False
             rooms_collection.insert_one(
-                {"Institution Name": name_of_institution_just_register, "Building Number": int(sheet.cell_value(i, 0)),
+                {"Institution Name": institution_name, "Building Number": int(sheet.cell_value(i, 0)),
                  "Building Name": sheet.cell_value(i, 1),
                  "Floor Number": int(sheet.cell_value(i, 2)), "Class Number": int(sheet.cell_value(i, 3)),
                  "Class Code": sheet.cell_value(i, 4),
