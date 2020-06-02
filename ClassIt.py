@@ -1,5 +1,5 @@
 import pymongo
-from flask import Flask, jsonify, request, render_template, url_for, redirect
+from flask import Flask, jsonify, request, render_template, url_for, redirect, send_file
 from flask_pymongo import PyMongo
 import json
 from schemas import validate_user, validate_login, validate_search_institutions, validate_apply_for_room, \
@@ -135,6 +135,16 @@ def about():
 @app.route("/upload-classes")
 def upload():
     return render_template('index.html')
+
+
+@app.route('/download-class', methods=['GET'])
+def return_class():
+    return send_file('class.xlsx', as_attachment=True, attachment_filename="class.xlsx")
+
+
+@app.route('/download-schedule', methods=['GET'])
+def return_schedule():
+    return send_file('schedule.xlsx', as_attachment=True, attachment_filename="schedule.xlsx")
 
 
 # registration
@@ -422,7 +432,7 @@ def check_class_availability(data, room):
             return True
 
 
-@app.route("/contact")
+@app.route("/contact" , methods=["POST"])
 def contact():
     data = validate_contact_request(request.get_json())
     if data["ok"]:

@@ -8,7 +8,15 @@ function ajax_classrequest(function_to_active, data,url,method) {
     data: JSON.stringify(data),
     error: function (result_data) {
       console.log("Error from server!");
-      $("#error").empty().append(result_data.responseJSON.data);
+      console.log(result_data);
+      if(result_data.status==400)
+      {
+        $("#error").empty().append(result_data.responseJSON.data);
+      }
+      else
+      {
+        $("#error").empty().append("error occurred saving info");
+      }
       setTimeout(
   function()
   {

@@ -196,7 +196,7 @@ contact_schema = {
         "Name",
         "Email",
         "Subject",
-        "text"
+        "Text"
     ],
     "additionalProperties": False
 }

@@ -11,6 +11,12 @@ function ajax_request(function_to_active, data,url,method) {
     error: function (result_data) {
       console.log("Error from server!");
       console.log(result_data);
+      $("#Amessage").empty().append("invalid email or password");
+      setTimeout(
+  function()
+  {
+    $("#Amessage").empty()
+  }, 3000);
     },
     success: function (result_data) {
         Cookies.set('Authorization',"Bearer " +result_data.data);

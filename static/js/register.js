@@ -9,6 +9,12 @@ function ajax_request(function_to_active, data,url,method) {
     error: function (result_data) {
       console.log("Error from server!");
       console.log(result_data);
+      $("#Amessage").empty().append(result_data.responseJSON.error);
+      setTimeout(
+  function()
+  {
+    $("#Amessage").empty()
+  }, 2000);
     },
     success: function (result_data) {
       function_to_active(result_data);
@@ -24,7 +30,7 @@ function ajax_request(function_to_active, data,url,method) {
 	});
 
   function register_success(returned_data){
-  window.location.href = "/profile.html";
+  window.location.href = "/login.html";
    }
 
    function register()
