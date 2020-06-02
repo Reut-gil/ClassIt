@@ -151,6 +151,9 @@ confirmation_schema = {
         "Email of Applier": {
             "type": "string"
         },
+        "Name of Applier": {
+            "type": "string"
+        },
         "Date": {
             "type": "string"
         },
@@ -158,6 +161,9 @@ confirmation_schema = {
             "type": "string"
         },
         "Finish Hour": {
+            "type": "string"
+        },
+        "Message": {
             "type": "string"
         }
     },
