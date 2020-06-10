@@ -118,7 +118,7 @@ apply_for_rooms_schema = {
         "Computers": {
             "type": "boolean"
         },
-        "Institution": {
+        "Institution Name": {
             "type": "string"
         }
     },
@@ -134,7 +134,7 @@ apply_for_rooms_schema = {
         "Projector",
         "Accessibility",
         "Computers",
-        "Institution"
+        "Institution Name"
     ],
     "additionalProperties": False
 }
@@ -145,35 +145,13 @@ confirmation_schema = {
         "Is confirmed": {
             "type": "boolean"
         },
-        "Class Code": {
-            "type": "string"
-        },
-        "Email of Applier": {
-            "type": "string"
-        },
-        "Name of Applier": {
-            "type": "string"
-        },
-        "Date": {
-            "type": "string"
-        },
-        "Start Hour": {
-            "type": "string"
-        },
-        "Finish Hour": {
-            "type": "string"
-        },
-        "Message": {
+        "_id": {
             "type": "string"
         }
     },
     "required": [
         "Is confirmed",
-        "Class Code",
-        "Email of Applier",
-        "Date",
-        "Start Hour",
-        "Finish Hour"
+        "_id"
     ],
     "additionalProperties": False
 }

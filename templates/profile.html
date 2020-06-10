@@ -25,7 +25,9 @@
         <nav class="navbar navbar-dark align-items-start sidebar sidebar-dark accordion p-0" style="background-color: #51c2bb;width: 250px;height: 1330px;">
             <div class="container-fluid d-flex flex-column p-0">
                 <a class="navbar-brand d-flex justify-content-center align-items-center sidebar-brand m-0" href="#" style="width: 200px;height: 82px;padding: 30px 14px ;">
-                    <div class="sidebar-brand-text mx-3" style="width: 0px;height: 40px;margin: 0px;"></div><img src="../static/img/logo%20svg.svg?h=4afb97530a027ca2e92de9dcfc94e382" style="width: 224px;height: 100px;padding: 18px 32px 4px 0px;"></a>
+                    <div class="sidebar-brand-text mx-3" style="width: 0px;height: 40px;margin: 0px;"></div>
+                    <img src="../static/img/classit.png" style="width: 213px;height: 62px;margin: 40px 80px 10px 40px;"></a>
+                </a>
                 <hr class="sidebar-divider my-0">
                 <ul class="nav navbar-nav text-light" id="accordionSidebar">
                     <li class="nav-item" role="presentation"></li>
@@ -33,7 +35,7 @@
                     <li class="nav-item" role="presentation"></li>
                     <li class="nav-item" role="presentation"></li>
                     <li class="nav-item" role="presentation"></li>
-                    <li class="nav-item" role="presentation"><a class="nav-link" href="Messages.html"><i class="material-icons">mail_outline</i><span href="Messages.html">Messages</span></a><a class="nav-link" href="Contact%20Us.html"><i class="icon ion-paper-airplane" style="height: 21px;"></i><span>Contact Us<br></span></a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" href="Messages.html"><i class="material-icons">mail_outline</i><span href="Messages.html">Requests</span></a><a class="nav-link" href="Contact%20Us.html"><i class="icon ion-paper-airplane" style="height: 21px;"></i><span>Contact Us<br></span></a></li>
                     <li
                         class="nav-item" role="presentation"></li>
                         <li class="nav-item" role="presentation"><a class="nav-link" href="blank.html"></a></li>
@@ -103,11 +105,11 @@
                                     </div>
                                     <div class="card shadow">
                                         <div class="card-header py-3">
-                                            <p class="text-primary m-0 font-weight-bold">College Info</p>
+                                            <p class="text-primary m-0 font-weight-bold">Institution Info</p>
                                         </div>
                                         <div class="card-body">
                                             <form id="instForm">
-                                                <div class="form-group"><label for="colla"><strong>College Name</strong></label><input id="colla" class="form-control" type="text" placeholder="The Academic College Of Tel Aviv-Yaffo" name="address"></div>
+                                                <div class="form-group"><label for="colla"><strong>Institution Name</strong></label><input id="colla" class="form-control" type="text" placeholder="The Academic College Of Tel Aviv-Yaffo" name="address"></div>
                                                 <div class="form-row">
                                                     <div class="col">
                                                         <div class="form-group"><label for="add"><strong>Address</strong><br></label><input id="add" class="form-control" type="text" placeholder="Rabenu Yeruham 2" name="city"></div>
@@ -117,7 +119,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="form-group"><button id="profbtn" class="btn btn-primary btn-sm" type="submit" style="background-color: #51c2bb;height: 38px;width: 110px;font-size: 16px;">Save&nbsp;</button></div>
-                                                <h3 id="success" style="color:green;"></h3>
+
                                             </form>
                                         </div>
                                         <div class="card-header py-3" style="height: 57px;">
@@ -128,7 +130,7 @@
                                             <form enctype=multipart/form-data id="fileform" action="upload-file" method="post">
                                                 <div class="form-group">
                                                     <label>
-                                                        <strong>1. Please Enter All Classes Details</strong>
+                                                        <strong>1. Please download the files templates:</strong>
                                                     </label>
                                                 </div>
                                                 <a class="btn btn-primary" href="download-class" style="background-color: #51c2bb;width: 125px;">Download classes</a>
@@ -139,7 +141,7 @@
                                                     <div class="col">
                                                         <div class="form-group">
                                                             <label>
-                                                                <strong>2. Upload Your Excel File Here</strong>
+                                                                <strong>2. Please upload your classes details file here:</strong>
                                                                 <br>
                                                             </label>
                                                         </div>
@@ -153,7 +155,7 @@
                                                     </div>
                                                 </div>
                                                 <label for="city" style="margin: 0px ;">
-                                                    <strong>3. Please Upload Your Institution's Schedule</strong>
+                                                    <strong>3. Please upload your institution's schedule here:</strong>
                                                     <br>
                                                 </label>
                                                 <div class="form-group">
@@ -163,6 +165,7 @@
                                                         <input name="upload-file2" type="file" class="file-input"></div>
                                                 </div>
                                                 <input class="btn btn-primary btn-sm" type="submit" value="Submit" style="background-color: #51c2bb;height: 38px;font-size: 16px;width: 125px;">
+                                                <h3 id="success" style="color:green;"></h3>
                                             </form>
                                         </div>
                                     </div>

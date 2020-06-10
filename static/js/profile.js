@@ -39,6 +39,7 @@ function ajax_profileGetRequest() {
 
 		$('#fileform').submit(function(e) {
         $(this).ajaxSubmit({
+        headers: {'Authorization':Cookies.get('Authorization')},
         error: function (result_data) {
          console.log("Error from server!");
          console.log(result_data);
@@ -56,29 +57,6 @@ function ajax_profileGetRequest() {
         e.preventDefault();
         });
     });
-
-    /*$("#fileform").submit(function(e) {
-      $.ajax({
-        type: "POST",
-        url: "/upload-file",
-        data: $("#fileform").serialize(),
-        error: function (result_data) {
-         console.log("Error from server!");
-         console.log(result_data);
-      },
-        success: function(data)
-        {
-          $("#success").empty().append(result_data.result);
-      setTimeout(
-          function()
-          {
-            $("#success").empty()
-          }, 2000);
-        }
-      });
-      e.preventDefault();
-    });
-  });*/
 
 
   function ajax_request(function_to_active, data,url,method) {

@@ -11,10 +11,10 @@ function ajax_request(function_to_active, data,url,method) {
       console.log(result_data);
       $("#Amessage").empty().append(result_data.responseJSON.error);
       setTimeout(
-  function()
-  {
-    $("#Amessage").empty()
-  }, 2000);
+          function()
+          {
+            $("#Amessage").empty()
+          }, 2000);
     },
     success: function (result_data) {
       function_to_active(result_data);

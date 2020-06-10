@@ -3,7 +3,7 @@ function ajax_classrequest(function_to_active, data,url,method) {
     url: url,
     type: method,
     async: true,
-    timeout: 2000,
+    timeout: 5000,
     contentType: "application/json",
     data: JSON.stringify(data),
     error: function (result_data) {
@@ -25,7 +25,7 @@ function ajax_classrequest(function_to_active, data,url,method) {
     },
     success: function (result_data) {
       function_to_active(result_data);
-      window.location.href = "/Index.html";
+      window.location.href = "/";
     }
   });
   }
@@ -101,7 +101,7 @@ function ajax_classrequest(function_to_active, data,url,method) {
     var Institution = $("#cselect")[0].value;
     var data = {"Email": email,"Date": date, "Name" : full_name, "Phone Number": phone_number,
     "Start Hour":Start,"Finish Hour":finish,"Number of Classes":parseInt(NumberOfClass),"Number of Seats":parseInt(NumberOfseats),
-    "Projector":Projector,"Accessibility":Accessibility,"Computers":Computers,"Institution": Institution};
+    "Projector":Projector,"Accessibility":Accessibility,"Computers":Computers,"Institution Name": Institution};
     ajax_classrequest(function_on_success,data,url,method);
   }
 
