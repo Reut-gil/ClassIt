@@ -351,7 +351,7 @@ def getData():
         if data["ok"]:
             data = data["data"]
             ID = data["_id"]
-            current_application = room_application_collection.find_one({"_id": ID})
+            current_application = room_application_collection.find_one({"_id": ObjectId(ID)})
             class_code = current_application["Class Code"]
             email = current_application["Email"]
             name = current_application["Name"]
@@ -361,7 +361,9 @@ def getData():
                                            current_application["Finish Hour"], current_application["Email"])
                 jsonStr = json.dumps(applied_obj.__dict__)
                 for classes in class_code:
-                    rooms_collection.update({"Class Code": classes}, {'$push': {'IsApplied': jsonStr}})
+                    rooms_collection.update_one({"Class Code": classes}, {'$push': {'IsApplied': jsonStr}})
+                    remove_application(ID, current_application["Date"], current_application["Start Hour"], \
+                                       current_application["Finish Hour"])
                 send_email_approve(email, name)
                 return jsonify({'ok': True, 'data': "The application was approved"}), 200
             else:
@@ -370,6 +372,18 @@ def getData():
                 return jsonify({'ok': True, 'data': "The application wasn't approved"}), 200
         else:
             return jsonify({'ok': False, 'message': 'Bad request parameters: {}'.format(data['message'])}), 400
+        
+        
+def remove_application(ID, date, start_hour, finish_hour):
+    applications = room_application_collection.find({"Date": date})
+    for app in applications:
+            # app = json.loads(app)
+        if (date == app["Date"] and app["Finish Hour"] >= start_hour >= app["Start Hour"]) or \
+                (date == app["Date"] and app["Start Hour"] < finish_hour <= app["Finish Hour"] and app["_id"] != ID):
+            send_email_reject(app["Email"], app["Name"])
+            room_application_collection.delete_one({"Class Code": app["Class Code"]})
+        else:
+            break
 
 
 def search_messages_result(institution_name):
