@@ -3,7 +3,7 @@ function ajax_classrequest(function_to_active, data,url,method) {
     url: url,
     type: method,
     async: true,
-    timeout: 5000,
+    timeout: 10000,
     contentType: "application/json",
     data: JSON.stringify(data),
     error: function (result_data) {
@@ -35,7 +35,7 @@ function ajax_classrequest(function_to_active, data,url,method) {
     url: url,
     type: "GET",
     async: true,
-    timeout: 2000,
+    timeout: 10000,
     contentType: "application/json",
     error: function (result_data) {
       console.log("Error from server!");

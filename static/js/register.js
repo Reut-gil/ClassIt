@@ -3,7 +3,7 @@ function ajax_request(function_to_active, data,url,method) {
     url: url,
     type: method,
     async: true,
-    timeout: 2000,
+    timeout: 10000,
     contentType: "application/json",
     data: JSON.stringify(data),
     error: function (result_data) {

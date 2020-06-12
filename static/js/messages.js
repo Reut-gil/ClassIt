@@ -50,7 +50,7 @@ function ajax_messegesGetRequest() {
     type: "POST",
     async: true,
     headers: {'Authorization':Cookies.get('Authorization')},
-    timeout: 2000,
+    timeout: 10000,
     contentType: "application/json",
     data: JSON.stringify({"Is confirmed":true,"_id":e.target.id}),
     error: function (result_data) {
@@ -71,7 +71,7 @@ function ajax_messegesGetRequest() {
     type: "POST",
     async: true,
     headers: {'Authorization':Cookies.get('Authorization')},
-    timeout: 2000,
+    timeout: 10000,
     contentType: "application/json",
     data: JSON.stringify({"Is confirmed":false,"_id":e.target.id}),
     error: function (result_data) {
