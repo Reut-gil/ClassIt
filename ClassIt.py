@@ -406,13 +406,13 @@ def send_email_approve(email, name):
         smtp.send_message(msg)
 
 
-def send_email_reject(email, name, message):
+def send_email_reject(email, name):
     msg = EmailMessage()
     msg['Subject'] = 'ClassIt | Class Request'
     msg['From'] = EMAIL_ADDRESS
     msg['To'] = email
-    msg.set_content('Dear ' + name + ',\n\nYour class request has been rejected.\n The message from the institution: ' \
-                    + message + '\n\n ClassIt-\nTHE EASY WAY TO ORDER A CLASSROOM')
+    msg.set_content('Dear ' + name + ',\n\nYour class request has been rejected. \n\n ClassIt-\nTHE EASY WAY TO ORDER '
+                                     'A CLASSROOM')
 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
         smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
