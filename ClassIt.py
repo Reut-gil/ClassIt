@@ -162,10 +162,6 @@ def register():
             user_collection.insert(
                 {"Name": content["Name"], "Email": content['Email'], "Phone Number": content["Phone Number"],
                  "Password": content["Password"], "Institution Name": None})
-            # institutions_collection.insert(
-            #     {"Institution Name": content["Institution Name"], "Street": content["Street"], "City": content["City"],
-            #      "Street Number": content["Street Number"]})
-            # name_of_institution_just_register = content["Institution Name"]
             return jsonify({"result": "User created successfully"}), 200
     else:
         return jsonify({"error": "Invalid parameters: {}".format(data['message'])}), 500
@@ -185,7 +181,8 @@ def profile():
             institution_col = institutions_collection.find_one({'Institution Name': institution})
             return jsonify(
                 {"Name": user["Name"], "Email": user["Email"], "Phone Number": user["Phone Number"], "Street": \
-                    institution_col["Street"], "City": institution_col["City"], "Institution Name": user["Institution Name"]})
+                    institution_col["Street"], "City": institution_col["City"],
+                 "Institution Name": user["Institution Name"]})
     elif request.method == "POST":
         data = validate_profile(request.get_json())
         if data["ok"]:
@@ -293,7 +290,6 @@ def apply_for_rooms():
                 for x in is_available:
                     if x == "No available room" or x is None:
                         count = (count + 1)
-                        # is_available.remove("No available room")
                     elif x is False:
                         return jsonify({'ok': False, 'data': 'institution not found'}), 400
                     else:
@@ -301,8 +297,6 @@ def apply_for_rooms():
                 if count == number_of_classes:
                     return jsonify({'ok': False, 'data': "There is no available room according your requirements"}), 400
                 data["IsApproved"] = False
-                # room_application_collection.update_one({"_id": id}, {"$set": {"IsApproved": False}})
-                # room_application_collection.update_one({"Email": data["Email"]}, {"$set": {"IsApproved": False}})
                 value = num_of_available
                 apply_for_class_info = data
                 institution = data["Institution Name"]
@@ -356,7 +350,7 @@ def getData():
             email = current_application["Email"]
             name = current_application["Name"]
             if data["Is confirmed"]:
-                room_application_collection.update_one({"_id": ID}, {"$set": {"IsApproved": True}})
+                room_application_collection.update_one({"_id": ObjectId(ID)}, {"$set": {"IsApproved": True}})
                 applied_obj = AppliedClass(current_application["Date"], current_application["Start Hour"], \
                                            current_application["Finish Hour"], current_application["Email"])
                 jsonStr = json.dumps(applied_obj.__dict__)
@@ -372,18 +366,16 @@ def getData():
                 return jsonify({'ok': True, 'data': "The application wasn't approved"}), 200
         else:
             return jsonify({'ok': False, 'message': 'Bad request parameters: {}'.format(data['message'])}), 400
-        
-        
+
+
 def remove_application(ID, date, start_hour, finish_hour):
     applications = room_application_collection.find({"Date": date})
-    for app in applications:
-            # app = json.loads(app)
-        if (date == app["Date"] and app["Finish Hour"] >= start_hour >= app["Start Hour"]) or \
-                (date == app["Date"] and app["Start Hour"] < finish_hour <= app["Finish Hour"] and app["_id"] != ID):
-            send_email_reject(app["Email"], app["Name"])
-            room_application_collection.delete_one({"Class Code": app["Class Code"]})
-        else:
-            break
+    for application in applications:
+        if ID != str(application["_id"]):
+            if (date == application["Date"] and application["Finish Hour"] >= start_hour >= application["Start Hour"]) or \
+                    (date == application["Date"] and application["Start Hour"] < finish_hour <= application["Finish Hour"]):
+                send_email_reject(application["Email"], application["Name"])
+                room_application_collection.delete_one({"_id": application["_id"]})
 
 
 def search_messages_result(institution_name):
@@ -399,7 +391,8 @@ def send_email_approve(email, name):
     msg['Subject'] = 'ClassIt | New Class Request'
     msg['From'] = EMAIL_ADDRESS
     msg['To'] = email
-    msg.set_content('Dear ' + name + ',\n\nYour class request has been successfully approved!\n\n ClassIt-\nTHE EASY WAY TO ORDER A CALSSROOM')
+    msg.set_content(
+        'Dear ' + name + ',\n\nYour class request has been successfully approved!\n\n ClassIt-\nTHE EASY WAY TO ORDER A CALSSROOM')
 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
         smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
@@ -424,7 +417,8 @@ def send_email_request(email, name):
     msg['Subject'] = 'ClassIt | Class Request'
     msg['From'] = EMAIL_ADDRESS
     msg['To'] = email
-    msg.set_content('Dear ' + name + ',\n\nYou have a new class request in your ClassIt mailbox.\n\n ClassIt-\nTHE EASY WAY TO ORDER A CLASSROOM')
+    msg.set_content(
+        'Dear ' + name + ',\n\nYou have a new class request in your ClassIt mailbox.\n\n ClassIt-\nTHE EASY WAY TO ORDER A CLASSROOM')
 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
         smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
@@ -451,8 +445,6 @@ def check_if_room_available(data, class_array):
                         (is_computers is False) or (is_computers is True and room["Computers"] is True)) and \
                         room["_id"] not in class_array and is_time_available):
                     return room["_id"]
-                # else:
-                #     return "No available room"
             else:
                 if ((number_of_seats <= room["Number of Seats"]) and (
                         (is_projector is False) or (is_projector is True and room["Projector"] is True)) and (
