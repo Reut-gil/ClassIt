@@ -296,7 +296,7 @@ def apply_for_rooms():
                         num_of_available.append(x)
                 if count == number_of_classes:
                     return jsonify({'ok': False, 'data': "There is no available room according your requirements"}), 400
-                data["IsApproved"] = False
+                data["IsApproved"] = None
                 value = num_of_available
                 apply_for_class_info = data
                 institution = data["Institution Name"]
@@ -361,7 +361,7 @@ def getData():
                 send_email_approve(email, name)
                 return jsonify({'ok': True, 'data': "The application was approved"}), 200
             else:
-                room_application_collection.update_one({"Class Code": class_code}, {"$set": {"IsApproved": False}})
+                room_application_collection.update_one({"_id": ObjectId(ID)}, {"$set": {"IsApproved": False}})
                 send_email_reject(email, name)
                 return jsonify({'ok': True, 'data': "The application wasn't approved"}), 200
         else:

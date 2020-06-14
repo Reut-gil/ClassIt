@@ -24,7 +24,7 @@ function ajax_messegesGetRequest() {
                 "<td id="+"td"+key+"><i id="+ value[key]["_id"] +" class='fa fa-check-circle' data-bs-hover-animate='rubberBand'style='margin-left: 0px;margin-right: 5px;height: 24px;font-size: 26px;color: rgb(25,50,237);'></i><i id="+ value[key]["_id"] +" class='fa fa-times-circle'data-bs-hover-animate='rubberBand' style='margin-left: 0px;margin-right: 5px;height: 24px;font-size: 26px;color: rgb(254,19,4);'></i>"+
              "</td>"+
         "</tr>")
-        if(value[key]["IsApproved"])
+        if(value[key]["IsApproved"] != null)
         {
             $("#td"+key).remove();
         }
