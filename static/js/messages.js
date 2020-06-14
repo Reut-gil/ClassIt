@@ -14,7 +14,7 @@ function ajax_messegesGetRequest() {
         console.log(result_data);
         $.each(result_data["results"] , function(key, value) {
         $("#messages_tbody").append(
-        "<tr>" +
+        "<tr id="+"tr"+key+">" +
             "<td><span><a href='confirmation.html'><i class='fa fa-envelope-o' data-bs-hover-animate='rubberBand' style='margin-left: 0px;margin-right: 5px;height: 24px;'></i></a>"+ value[key]["Name"] + "</span></td>"+
                 "<td>"+ value[key]["Building Name"] +"</td>"+
                 "<td>"+ value[key]["Class Code"] +"</td>"+
@@ -27,6 +27,14 @@ function ajax_messegesGetRequest() {
         if(value[key]["IsApproved"] != null)
         {
             $("#td"+key).remove();
+        }
+        if(value[key]["IsApproved"]==true)
+        {
+            $("#tr"+key).addClass("alert alert-success")
+        }
+        if(value[key]["IsApproved"]==false)
+        {
+            $("#tr"+key).addClass("alert alert-danger")
         }
         });
         $('[data-bs-hover-animate]')

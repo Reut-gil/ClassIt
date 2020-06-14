@@ -11,7 +11,7 @@ function ajax_classrequest(function_to_active, data,url,method) {
       console.log(result_data);
       if(result_data.status==400)
       {
-        $("#error").empty().append(result_data.responseJSON.data);
+        $("#error").empty().append("error make sure you apply correctly").append(result_data.responseJSON.data);
       }
       else
       {
@@ -25,7 +25,6 @@ function ajax_classrequest(function_to_active, data,url,method) {
     },
     success: function (result_data) {
       function_to_active(result_data);
-      window.location.href = "/";
     }
   });
   }
@@ -79,7 +78,8 @@ function ajax_classrequest(function_to_active, data,url,method) {
 }
 
   function order_success(returned_data){
-  window.location.href = "Index.html";
+        $("#success").empty().append("The application has been sent and is pending for approval. A reply will be sent to you as soon as possible.");
+        setInterval(function(){$("#success").empty();window.location.href = "/";}, 3000);
    }
 
   function applying_for_room(event)
