@@ -75,6 +75,8 @@ function ajax_profileGetRequest() {
     },
     success: function (result_data) {
     $("#success").empty().append(result_data.result);
+    window.location.href = "/profile.html";
+
       setTimeout(
   function()
   {
