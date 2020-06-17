@@ -10,3 +10,4 @@ pymongo[srv]==3.10.1
 xlrd==1.2.0
 gunicorn==20.0.4
 jsonschema==3.0.2
+pyexcel_xls==0.5.8
